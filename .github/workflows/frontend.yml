@@ -25,3 +25,21 @@ jobs:
 
       - name: Run Tests
         run: npm test
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v1.9
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.organization=your-org-name
+            -Dsonar.projectKey=your-project-key
+            -Dsonar.sources=.
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Run Snyk Security Scan
+        uses: snyk/actions/node@master
+        with:
+          args: test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
