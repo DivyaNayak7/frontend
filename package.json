@@ -42,4 +42,13 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17"
   }
+
+  "jest": {
+  "roots": ["<rootDir>/src"],
+  "testMatch": [
+    "**/__tests__/**/*.[jt]s?(x)",
+    "**/?(*.)+(spec|test).[tj]s?(x)"
+  ]
+}
+
 }
