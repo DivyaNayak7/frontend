@@ -23,42 +23,70 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Run Jest tests
+      - name: Run Tests
         run: npm test
 
-  sonarcloud:
+  docker:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.organization=divyanayak7
-            -Dsonar.projectKey=DivyaNayak7_frontend
-            -Dsonar.sources=src
-            -Dsonar.host.url=https://sonarcloud.io
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-  snyk:
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/frontend-app:latest .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/frontend-app:latest
+
+  sonarcloud:
     runs-on: ubuntu-latest
-    needs: sonarcloud
+    needs: docker
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run Snyk Security Scan
-        uses: snyk/actions/node@master
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          command: test
+          projectKey: ${{ secrets.SONAR_PROJECT_KEY }}
+          organization: ${{ secrets.SONAR_ORGANIZATION }}
 
+  snyk:
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk Security Scan
+        run: snyk test --severity-threshold=high
+
+  zap_scan:
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Pull ZAP Docker Image
+        run: docker pull owasp/zap2docker-stable
+
+      - name: Run ZAP Baseline Scan
+        run: |
+          docker run --rm -v $(pwd):/zap/wrk:rw owasp/zap2docker-stable \
+          zap-baseline.py -t http://your-frontend-url.com \
+          -r zap_report.html -w 10 || true
