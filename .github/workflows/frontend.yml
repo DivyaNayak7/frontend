@@ -86,11 +86,14 @@ jobs:
 
   zap_scan:
     name: ZAP Baseline Scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: docker
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Remove Cached GitHub Actions
+        run: rm -rf ${{ runner.tool_cache }}/actions
 
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
@@ -109,9 +112,11 @@ jobs:
       - name: Verify ZAP Report Exists
         run: ls -lh zap_report.html || echo "⚠️ ZAP report not found!"
 
-      - name: Upload ZAP Report (Primary Attempt - Force v2)
+      - name: Upload ZAP Report (Final Fix)
         if: success()
         uses: actions/upload-artifact@v2
         with:
           name: ZAP Security Report
           path: zap_report.html
+          repository: actions/upload-artifact
+
