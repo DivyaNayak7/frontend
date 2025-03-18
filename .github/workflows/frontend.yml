@@ -90,7 +90,13 @@ jobs:
     needs: docker
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/upload-artifact@v2
+  with:
+    name: ZAP Security Report
+    path: zap_report.html
+    repository: actions/upload-artifact
+
+
 
       - name: Remove Cached GitHub Actions
         run: rm -rf ${{ runner.tool_cache }}/actions
