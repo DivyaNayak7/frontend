@@ -16,7 +16,7 @@ permissions:
 jobs:
   build:
     name: Build Project
-    runs-on: ubuntu-20.04  # ✅ FIX: Use a stable runner version
+    runs-on: ubuntu-20.04  # ✅ Stable runner version
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -29,11 +29,18 @@ jobs:
 
   zap_scan:
     name: ZAP Baseline Scan
-    runs-on: ubuntu-20.04  # ✅ FIX: Use ubuntu-20.04 for stability
+    runs-on: ubuntu-20.04  # ✅ Ensuring compatibility
     needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Manually Fetch Required Actions  # ✅ Forces GitHub to fetch required actions
+        run: |
+          gh extension install actions/checkout
+          gh extension install actions/upload-artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Remove Cached GitHub Actions
         run: rm -rf ${{ runner.tool_cache }}/actions
@@ -55,9 +62,9 @@ jobs:
       - name: Verify ZAP Report Exists
         run: ls -lh zap_report.html || echo "⚠️ ZAP report not found!"
 
-      - name: Upload ZAP Report
+      - name: Upload ZAP Report  # ✅ FIXED: Now using v3
         if: success()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ZAP Security Report
           path: zap_report.html
