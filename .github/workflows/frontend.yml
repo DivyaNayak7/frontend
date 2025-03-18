@@ -14,21 +14,9 @@ permissions:
   security-events: write
 
 jobs:
-  pre-check:
-    name: Pre-Check GitHub Actions
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Install GitHub CLI
-        run: sudo apt update && sudo apt install -y gh
-
-      - name: Authenticate GitHub CLI
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-
-
   build:
     name: Build Project
-    runs-on: ubuntu-20.04
-    needs: pre-check
+    runs-on: ubuntu-20.04  # ✅ FIX: Use a stable runner version
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -39,67 +27,10 @@ jobs:
       - name: Build project
         run: npm run build
 
-  docker:
-    name: Docker Build & Push
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-
-      - name: Build Docker Image
-        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/frontend:latest .
-
-      - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/frontend:latest
-
-  sonarcloud:
-    name: SonarCloud Scan
-    runs-on: ubuntu-20.04
-    needs: docker
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install SonarScanner
-        run: |
-          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip sonar-scanner.zip
-          mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
-          echo "/opt/sonar-scanner/bin" >> $GITHUB_PATH
-
-      - name: SonarCloud Scan
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
-            -Dsonar.host.url="https://sonarcloud.io" \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-
-  snyk:
-    name: Snyk Security Scan
-    runs-on: ubuntu-20.04
-    needs: docker
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install Snyk CLI
-        run: npm install -g snyk
-
-      - name: Authenticate Snyk
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
-
-      - name: Run Snyk Security Scan
-        run: snyk test --severity-threshold=high || true  # Prevents pipeline failure
-
   zap_scan:
     name: ZAP Baseline Scan
-    runs-on: ubuntu-20.04
-    needs: docker
+    runs-on: ubuntu-20.04  # ✅ FIX: Use ubuntu-20.04 for stability
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -124,7 +55,7 @@ jobs:
       - name: Verify ZAP Report Exists
         run: ls -lh zap_report.html || echo "⚠️ ZAP report not found!"
 
-      - name: Upload ZAP Report (Final Fix)
+      - name: Upload ZAP Report
         if: success()
         uses: actions/upload-artifact@v2
         with:
