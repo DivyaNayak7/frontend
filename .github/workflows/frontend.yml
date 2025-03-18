@@ -14,11 +14,14 @@ permissions:
   security-events: write
 
 jobs:
+
   pre-check:
     name: Pre-Check GitHub Actions
     runs-on: ubuntu-22.04
     steps:
       - name: Manually Fetch GitHub Actions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Manually fetching required GitHub Actions"
           gh extension install actions/checkout
