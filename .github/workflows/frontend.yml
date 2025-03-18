@@ -16,7 +16,7 @@ permissions:
 jobs:
   pre-check:
     name: Pre-Check GitHub Actions
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Install GitHub CLI
         run: sudo apt update && sudo apt install -y gh
@@ -27,7 +27,7 @@ jobs:
 
   build:
     name: Build Project
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: pre-check
     steps:
       - name: Checkout code
@@ -41,7 +41,7 @@ jobs:
 
   docker:
     name: Docker Build & Push
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: build
     steps:
       - name: Checkout code
@@ -58,7 +58,7 @@ jobs:
 
   sonarcloud:
     name: SonarCloud Scan
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: docker
     steps:
       - name: Checkout code
@@ -81,7 +81,7 @@ jobs:
 
   snyk:
     name: Snyk Security Scan
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: docker
     steps:
       - name: Checkout code
@@ -98,7 +98,7 @@ jobs:
 
   zap_scan:
     name: ZAP Baseline Scan
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: docker
     steps:
       - name: Checkout code
