@@ -8,6 +8,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 jobs:
   build:
     name: Build Project
@@ -104,9 +109,16 @@ jobs:
       - name: Verify ZAP Report Exists
         run: ls -lh zap_report.html || echo "⚠️ ZAP report not found!"
 
-      - name: Upload ZAP Report
+      - name: Upload ZAP Report (Primary Attempt)
         if: success()
         uses: actions/upload-artifact@v3
         with:
           name: ZAP Security Report
+          path: zap_report.html
+
+      - name: Upload ZAP Report (Fallback to v2)
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: ZAP Security Report (Fallback)
           path: zap_report.html
