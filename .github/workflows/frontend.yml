@@ -47,6 +47,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Install SonarScanner
+        run: |
+          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner.zip
+          mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
+          echo "/opt/sonar-scanner/bin" >> $GITHUB_PATH
+
       - name: SonarCloud Scan
         run: |
           sonar-scanner \
