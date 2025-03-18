@@ -79,35 +79,34 @@ jobs:
       - name: Run Snyk Security Scan
         run: snyk test --severity-threshold=high || true  # Prevents pipeline failure
 
-zap_scan:
-  name: ZAP Baseline Scan
-  runs-on: ubuntu-latest
-  needs: docker
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+  zap_scan:
+    name: ZAP Baseline Scan
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Log in to Docker Hub
-      run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-    - name: Pull ZAP Docker Image
-      run: docker pull owasp/zap2docker-stable
+      - name: Pull ZAP Docker Image
+        run: docker pull owasp/zap2docker-stable
 
-    - name: Run ZAP Baseline Scan with Debug Mode
-      run: |
-        docker run --rm -v $(pwd):/zap/wrk owasp/zap2docker-stable zap-baseline.py \
-          -t https://your-app-url.com -r zap_report.html --debug
+      - name: Run ZAP Baseline Scan with Debug Mode
+        run: |
+          docker run --rm -v $(pwd):/zap/wrk owasp/zap2docker-stable zap-baseline.py \
+            -t https://your-app-url.com -r zap_report.html --debug
 
-    - name: Wait before uploading artifact
-      run: sleep 5s
+      - name: Wait before uploading artifact
+        run: sleep 5s
 
-    - name: Verify ZAP Report Exists
-      run: ls -lh zap_report.html || echo "⚠️ ZAP report not found!"
+      - name: Verify ZAP Report Exists
+        run: ls -lh zap_report.html || echo "⚠️ ZAP report not found!"
 
-    - name: Upload ZAP Report
-      if: success()
-      uses: actions/upload-artifact@v2  # Downgraded to v2
-      with:
-        name: ZAP Security Report
-        path: zap_report.html
-
+      - name: Upload ZAP Report
+        if: success()
+        uses: actions/upload-artifact@v2  # Downgraded to v2
+        with:
+          name: ZAP Security Report
+          path: zap_report.html
