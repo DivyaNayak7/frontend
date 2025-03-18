@@ -110,7 +110,3 @@ jobs:
         with:
           name: ZAP Security Report
           path: zap_report.html
-
-        with:
-          name: ZAP Security Report
-          path: zap_report.html
